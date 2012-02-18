@@ -1,0 +1,21 @@
+require 'minusj.rb'
+
+body = %w(a b c d e f g)
+
+body.each do |t|
+  task t do
+    sh "sleep 1"
+  end
+end
+
+task :h => body do
+  sh "sleep 1"
+end
+
+task :i => body do
+  sh "sleep 2"
+end
+
+task :all => [:h, :i] do |t|
+  sh "echo done"
+end
