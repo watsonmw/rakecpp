@@ -1,2 +1,3 @@
 cdepends/test/.rake_cdepends.rb
+cdepends/test/lib1/test_gen.h
 cdepends/test/objs/

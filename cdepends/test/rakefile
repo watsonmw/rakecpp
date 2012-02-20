@@ -63,4 +63,6 @@ task :test_parser do
     "hello/hello5.h"
 BIGTEST
   test_parser(test, %w(hello1.h hello2.h hello3.h hello/hello4.h hello/hello5.h))
+
+  puts "Tests OK!"
 end
