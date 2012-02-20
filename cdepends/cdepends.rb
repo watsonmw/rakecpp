@@ -1,8 +1,6 @@
 # TODO:
-#
-#  - Unit Tests
 #  - Handle case insensitivity
-#  - Lots of documentation
+#  - Documentation
 #  - Allow makedepends to plugin
 #  - String param to allow name of depends file to be specified
 #
@@ -18,7 +16,6 @@
 #  Bad things about rake's import/makedepends method:
 #  - Dependancies generated even when you specify a target that does
 #    not need them.
-#  -
 
 # Add task search function to rake.
 # This is different from lookup() because it will try to create the
@@ -71,6 +68,36 @@ class Rake::FastFileTask < Rake::FileTask
       end
     end
   end
+end
+
+class Rake::CParser
+  def self.parse_file_includes file
+    parse_includes File.read(file)
+  end
+
+  # quick and dirty method of extracting include files
+  # from a source file.
+  def self.parse_includes src
+    includes = []
+    src.gsub!(/\/\*(?:.*?)\*\//m, "")
+    unparsed_lines = ""
+    src.lines.each { |line|
+      line = unparsed_lines + line
+      case line
+      when /^\s*(#\s*include\s+)\\$/
+        # save continued line
+        unparsed_lines += $1
+      when /^\s*#\s*include\s+"([^"]+)"/
+        includes << $1
+        unparsed_lines = ""
+      when /^\s*#\s*include\s+<([^>]+)>/
+        includes << $1
+        unparsed_lines = ""
+      end
+    }
+    includes
+  end
+
 end
 
 # A basic c/c++ dependancy generator.
@@ -211,7 +238,7 @@ private
 
   # Return file list containing paths to files included in +src+
   def find_includes include_dirs, src
-    includes = parse_includes src
+    includes = Rake::CParser.parse_file_includes src
     res = includes.collect { |inc|
       search_includes include_dirs, src, inc
     }
@@ -254,71 +281,6 @@ private
     else
       false
     end
-  end
-
-  def parse_file_includes file
-    parse_includes File.read(file)
-  end
-
-  def parse_includes src
-    includes = []
-    state = :nil
-    src.sub!(/\/\*.*\*\//, "")
-    unparsed_lines = ""
-    src.each { |line|
-      line.chomp!
-      line = unparsed_lines + line
-      case line
-      when /^(.*)\\$/
-        unparsed_lines += $_ + " "
-      when /^\s*#\s*include\s+"([^"]+)"/
-        includes << $1
-        unparsed_lines = ""
-      when /^\s*#\s*include\s+<([^>]+)>/
-        includes << $1
-        unparsed_lines = ""
-      end
-    }
-    includes
-  end
-
-  def parse_includes_old src
-    includes = []
-    in_block_comment = false
-    prev_line = nil
-    src.each { |line|
-      line.chomp!
-      if block_start_i = line.index("/*")
-        c_start_i = line.index("//")
-        if !c_start_i || block_start_i < c_start_i
-          if block_end_i = line.index("*/")
-            if block_end_i > block_start_i
-              line[block_start_i..block_end_i+1] = ""
-            end
-          end
-        end
-      end
-      if prev_line
-        line = prev_line << line
-        prev_line = nil
-      end
-      if line =~ /\\$/
-        prev_line = line.chomp[0...line.length-1]
-      end
-      if in_block_comment
-        in_block_comment = false if line =~ /\*\//
-        next
-      end
-      case line
-      when /^\s*#\s*include\s+"([^"]+)"$/
-        includes << $1
-      when /^\s*#\s*include\s+<([^>]+)>$/
-        includes << $1
-      when /(?!\/\/)[^\/]*\/\*/
-        in_block_comment = true
-      end
-    }
-    includes
   end
 
   # Called by dependancy file to add dependancies to this object.

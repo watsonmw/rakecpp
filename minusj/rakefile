@@ -1,4 +1,5 @@
-require 'minusj.rb'
+$: << File.join(File.dirname(__FILE__))
+require 'minusj'
 
 body = %w(a b c d e f g)
 

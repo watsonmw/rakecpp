@@ -73,7 +73,7 @@ module Rake
           num_threads = ENV['threads'] ? ENV['threads'].to_i : 1
           top_level_tasks.each { |task_name|
             task = self[task_name]
-	    if num_threads > 1
+            if num_threads > 1
               parallel_invoke(task, num_threads)
             else
               task.invoke
@@ -104,10 +104,10 @@ module Rake
 
               # Let main thread know we are done.
               result_queue.done
-		   
+
               # Block the exception but save for later.  This allows other
-	      # threads to complete their current prereq, before we issue the
-	      # error to the user, insuring that the rake formatted error is
+              # threads to complete their current prereq, before we issue the
+              # error to the user, insuring that the rake formatted error is
               # the last line sent to the stdout/stderr.
               lock.synchronize do
                 if not thread_error
@@ -128,7 +128,7 @@ module Rake
       #   then submit that task to the thread pool for execution.
       @children = {} # maps task -> tasks it depends on 
       @parents  = {} # maps task -> tasks that depend on it
-  
+
       analyze_dependencies(task)
 
       while (result = result_queue.deq) != nil && result != task
@@ -137,10 +137,10 @@ module Rake
           list.delete result
           if list.empty?
             @children.delete parent_task
-	    @task_queue.enq parent_task
+            @task_queue.enq parent_task
           end
         end
-    
+
         @parents.delete result
       end
 
@@ -158,9 +158,9 @@ module Rake
     # build, using the "children" and "parents" hash tables
     def analyze_dependencies(task, analyzed=Array.new)
       return if analyzed.member?(task)
-  
+
       analyzed << task
-  
+
       prereqs = task.prerequisites
       if prereqs.empty?
         return if not @task_queue.enq task

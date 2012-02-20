@@ -1,0 +1,66 @@
+$: << File.join(File.dirname(__FILE__), "..")
+
+require 'cdepends'
+require 'rake/clean'
+
+directory 'objs'
+
+# Define a task for building a cpp file
+cobject('objs/lib1.o' => ['lib1/lib1.cpp', 'objs'],
+        :includes => %w(lib1 lib2)) do |t|
+  touch t.name
+end
+
+# Define a task for building a cpp file
+cobject('objs/lib2.o' => ['lib2/lib2.cpp', 'objs'],
+        :includes => %w(lib2)) do |t|
+  touch t.name
+end
+
+# Example rule for generated headers
+rule '.h' => '.i' do |r|
+  cp r.source, r.name
+end
+
+desc "Build 2 cpp files and any deps"
+task :default => ['objs/lib1.o', 'objs/lib2.o']
+
+task :clean do
+  rm_rf 'objs'
+  rm_rf 'lib1/test_gen.h'
+end
+
+def assert_equals expected, actual
+  if (expected != actual)
+    throw "Expected #{expected} but got #{actual}"
+  end
+end
+
+def test_parser src, headers
+  assert_equals(headers, Rake::CParser.parse_includes(src))
+end
+
+desc "Some basic test for the c include parser"
+task :test_parser do
+  test_parser("#include <hello.h>", ["hello.h"])
+  test_parser("#include \\\n\"hello.h\"\n", ["hello.h"])
+  test_parser("#include \"hello.h\"\n", ["hello.h"])
+  test_parser("#include \/* *\/ \"hello.h\"\n", ["hello.h"])
+
+  test = <<-'BIGTEST'
+#include /* 
+#include "xx.h"
+#include \
+    "xx.h"
+   #*/ "hello1.h"
+#include \
+    "hello2.h"
+#include \
+    <hello3.h>
+#include \
+    <hello/hello4.h>
+#include \
+    "hello/hello5.h"
+BIGTEST
+  test_parser(test, %w(hello1.h hello2.h hello3.h hello/hello4.h hello/hello5.h))
+end
