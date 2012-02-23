@@ -1,3 +1,6 @@
 cdepends/test/.rake_cdepends.rb
 cdepends/test/lib1/test_gen.h
 cdepends/test/objs/
+cdepends/test/perf/.depends.mf
+cdepends/test/perf/.rake_cdepends.rb
+cdepends/test/perf/tmp
